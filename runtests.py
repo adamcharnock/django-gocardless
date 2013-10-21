@@ -20,7 +20,9 @@ if not settings.configured:
         ],
         NOSE_ARGS = [
             '--with-coverage',
-            '--cover-package=django_gocardless'
+            '--cover-package=django_gocardless',
+            '--nocapture',
+            '--logging-clear-handlers',
         ]
     )
 
