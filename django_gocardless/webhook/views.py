@@ -1,40 +1,19 @@
-import json
-from django.views.generic.base import View
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from django.conf import settings
-from gocardless.utils import generate_signature
+from django_gocardless.views import GoCardlessView
 
 from .models import Payload
 
 
-def verify_signature(payload):
-
-    pms = payload.copy()
-    pms.pop('signature')
-    signature = generate_signature(pms, settings.GOCARDLESS_APP_SECRET)
-
-    if signature == payload['signature']:
-        return True
-    return False
-
-
-class WebhookView(View):
+class WebhookView(GoCardlessView):
 
     def post(self, request, *args, **kwargs):
-
-        flag = None
-
-        # move the json into a workable format
-        payload = json.loads(request.body)['payload']
-
-        if not verify_signature(payload):
-            flag = u'Signature did not validate'
-
-        # initialise the objects
-        Payload.objects.create_for_payload(payload, flag)
-
+        Payload.objects.create_for_payload(self.get_payload(request))
         return HttpResponse('OK')
+
+    def handle_invalid_signature(self, request, *args, **kwargs):
+        Payload.objects.create_for_payload(self.get_payload(request), flag='Signature did not validate')
+        return super(WebhookView, self).handle_invalid_signature(request, *args, **kwargs)
 
 
 webhook_view = csrf_exempt(WebhookView.as_view())

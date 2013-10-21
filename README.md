@@ -15,7 +15,11 @@ Using GoCardless Django
         ...
         INSTALLED_APPS = (... 'django_gocardless.webhook', ...)
         ...
-        GOCARDLESS_APP_SECRET = "...$$$..."
+        GOCARDLESS_APP_ID = "..."
+        GOCARDLESS_APP_SECRET = "..."
+        GOCARDLESS_ACCESS_TOKEN = "..."
+        GOCARDLESS_MERCHANT_ID = "..."
+        GOCARDLESS_SANDBOX = True # Use sandbox while developing
 
 1.  GoCardless will post to your "webhook_url". 
     The view `django_gocardless.webhook.views.webhok_view` handles this. 
