@@ -33,6 +33,9 @@ class PreAuthorization(models.Model):
     setup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=None, null=True, blank=True)
     calendar_intervals = models.BooleanField(default=False)
 
+    resource_uri = models.CharField(max_length=255, default='', blank=True)
+    resource_id = models.CharField(max_length=255, default='', blank=True)
+
     def get_return_trip(self):
         return ReturnTrip.objects.create_for_model(self, depart_url=self.authorize_url)
 
@@ -53,7 +56,9 @@ class PreAuthorization(models.Model):
 
     @transition(source='notsent', target='inactive')
     def user_returns(self, return_trip):
-        pass
+        returning_payload = return_trip.returning_payload
+        self.resource_uri = returning_payload['resource_uri']
+        self.resource_id = returning_payload['resource_id']
 
     @property
     def success_url(self):

@@ -11,7 +11,7 @@ class ReturnView(GoCardlessView):
             return_trip = ReturnTrip.objects.get(pk=request.GET.get('state'))
         except ReturnTrip.DoesNotExist:
             return HttpResponseBadRequest('Return trip not found')
-        return_trip.receive()
+        return_trip.receive(self.get_payload(request))
         success_url = return_trip.get_model().success_url
         return HttpResponseRedirect(success_url)
 

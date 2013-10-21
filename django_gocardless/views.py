@@ -11,17 +11,17 @@ class GoCardlessPayloadMixin(object):
 
     def get_payload(self, request):
         if not hasattr(self, '_payload'):
-            if request.method.lower() not in ('get', 'head'):
-                self._payload = json.loads(request.body)['payload']
+            if request.method.lower() == 'get':
+                self._payload = request.GET.dict()
             else:
-                self._payload = None
+                self._payload = json.loads(request.body)['payload']
         return self._payload
 
 class GoCardlessSignatureMixin(GoCardlessPayloadMixin):
     """ Will verify a GoCardless signature """
 
     def verify_signature(self, request):
-        data = self.get_payload(request) or request.GET.dict()
+        data = self.get_payload(request)
         if not data:
             logger.warning('No payload or request data found')
             return False

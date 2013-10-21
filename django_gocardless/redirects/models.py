@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.db.models import get_model
 from django_fsm.db.fields import FSMField, transition
@@ -26,6 +27,7 @@ class ReturnTrip(models.Model):
     status = FSMField(default='departed')
     extra_state = models.CharField(max_length=255, default='', blank=True)
     depart_url = models.CharField(max_length=255)
+    returning_payload_json = models.TextField(default='')
 
     objects = ReturnTripManager()
 
@@ -33,10 +35,15 @@ class ReturnTrip(models.Model):
         return get_model(*self.for_model_class.split('.')).objects.get(pk=self.for_pk)
 
     @transition(source='departed', target='returned', save=True)
-    def receive(self):
+    def receive(self, payload):
         model = self.get_model()
+        self.returning_payload_json = json.dumps(payload)
         model.user_returns(self)
         model.save()
+
+    @property
+    def returning_payload(self):
+        return json.loads(self.returning_payload_json)
 
 
 
