@@ -1,33 +1,42 @@
 import json
+import logging
 from django.conf import settings
 from django.http.response import HttpResponseBadRequest
 from django.views.generic.base import View
 from gocardless.utils import generate_signature
 
+logger = logging.getLogger('django_gocardless')
+
 class GoCardlessPayloadMixin(object):
 
     def get_payload(self, request):
-        if not getattr(self, '_payload', None):
-            self._payload = json.loads(request.body)['payload']
+        if not hasattr(self, '_payload'):
+            if request.method.lower() not in ('get', 'head'):
+                self._payload = json.loads(request.body)['payload']
+            else:
+                self._payload = None
         return self._payload
 
 class GoCardlessSignatureMixin(GoCardlessPayloadMixin):
     """ Will verify a GoCardless signature """
 
     def verify_signature(self, request):
-        payload = self.get_payload(request)
-        pms = payload.copy()
+        data = self.get_payload(request) or request.GET.dict()
+        if not data:
+            logger.warning('No payload or request data found')
+            return False
+
+        pms = data.copy()
         pms.pop('signature')
         signature = generate_signature(pms, settings.GOCARDLESS_APP_SECRET)
 
-        if signature == payload['signature']:
+        if signature == data['signature']:
             return True
         return False
 
     def dispatch(self, request, *args, **kwargs):
-        if request.method.lower() not in ('GET', 'HEAD'):
-            if not self.verify_signature(request):
-                return self.handle_invalid_signature(request, *args, **kwargs)
+        if not self.verify_signature(request):
+            return self.handle_invalid_signature(request, *args, **kwargs)
 
         return super(GoCardlessSignatureMixin, self).dispatch(request, *args, **kwargs)
 

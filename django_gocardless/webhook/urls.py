@@ -4,5 +4,5 @@ from .views import webhook_view
 
 urlpatterns = patterns(
     '',
-    url(r'^$', webhook_view, name="gocardless_webhook"),
+    url(r'^webhook/$', webhook_view, name="gocardless_webhook"),
 )

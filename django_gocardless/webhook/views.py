@@ -12,7 +12,9 @@ class WebhookView(GoCardlessView):
         return HttpResponse('OK')
 
     def handle_invalid_signature(self, request, *args, **kwargs):
-        Payload.objects.create_for_payload(self.get_payload(request), flag='Signature did not validate')
+        payload = self.get_payload(request)
+        if payload:
+            Payload.objects.create_for_payload(payload, flag='Signature did not validate')
         return super(WebhookView, self).handle_invalid_signature(request, *args, **kwargs)
 
 
