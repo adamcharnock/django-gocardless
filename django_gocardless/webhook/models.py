@@ -25,13 +25,15 @@ class PayloadManager(models.Manager):
             ) if item.get('paid_at') else None
 
             # create the object
+            amount = item.get('amount')
+            amount_minus_fees = item.get('amount_minus_fees')
             o = self.create(
                 payload_id=item.get('id'),
                 status=item.get('status'),
                 source_type=item.get('source_type'),
                 source_id=item.get('source_id'),
-                amount=Decimal(item.get('amount')),
-                amount_minus_fees=Decimal(item.get('amount_minus_fees')),
+                amount=Decimal(amount) if amount is not None else None,
+                amount_minus_fees=Decimal(amount_minus_fees) if amount_minus_fees is not None else None,
                 paid_at=paid_at,
                 uri=item.get('uri'),
                 resource_type=resource_type,
