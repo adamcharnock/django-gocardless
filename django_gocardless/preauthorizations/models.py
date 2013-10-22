@@ -45,7 +45,7 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
     description = models.TextField(default='', blank=True, help_text='More verbose description, which will be displayed to the user')
     setup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=None, null=True, blank=True)
     calendar_intervals = models.BooleanField(default=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='preauthorizations')
 
     resource_uri = models.CharField(max_length=255, default='', blank=True)
     resource_id = models.CharField(max_length=255, default='', blank=True, db_index=True)
