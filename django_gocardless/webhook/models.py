@@ -71,7 +71,7 @@ class Payload(models.Model):
         ('failed', 'Failed'),
         ('withdrawn', 'Withdrawn'),
         ('refunded', 'Refunded'),
-        ('inactive', 'Inactive'),
+        ('inactive', 'Inasource_idctive'),
         ('active', 'Active'),
         ('cancelled', 'Cancelled'),
         ('expired', 'Expired')

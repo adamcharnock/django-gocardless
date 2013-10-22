@@ -2,10 +2,8 @@ import json
 import logging
 from django.conf import settings
 from django.http.response import HttpResponseBadRequest
-from django.views.generic.base import View
+from django.views.generic.base import View, logger
 from gocardless.utils import generate_signature
-
-logger = logging.getLogger('django_gocardless')
 
 class GoCardlessPayloadMixin(object):
 

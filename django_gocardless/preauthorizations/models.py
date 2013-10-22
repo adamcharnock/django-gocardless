@@ -1,10 +1,23 @@
+import logging
+from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import models
 from django_fsm.db.fields import FSMField, transition
 from django_gocardless.client import get_client
-from django_gocardless.redirects.models import ReturnTrip
+from django_gocardless.returntrips.models import ReturnTrippableMixin
+from django_gocardless.utils import logger
+from django_gocardless.webhook import signals
+
+class PreAuthorizationManager(models.Manager):
+    def active(self):
+        return self.filter(status=PreAuthorization.ACTIVE)
+    def cancelled(self):
+        return self.filter(status=PreAuthorization.CANCELLED)
+    def expired(self):
+        return self.filter(status=PreAuthorization.EXPIRED)
 
 
-class PreAuthorization(models.Model):
+class PreAuthorization(ReturnTrippableMixin, models.Model):
     DAY = 'day'
     WEEK = 'week'
     MONTH = 'month'
@@ -32,39 +45,74 @@ class PreAuthorization(models.Model):
     description = models.TextField(default='', blank=True, help_text='More verbose description, which will be displayed to the user')
     setup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=None, null=True, blank=True)
     calendar_intervals = models.BooleanField(default=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     resource_uri = models.CharField(max_length=255, default='', blank=True)
-    resource_id = models.CharField(max_length=255, default='', blank=True)
+    resource_id = models.CharField(max_length=255, default='', blank=True, db_index=True)
+    resource_type = 'pre_authorization'
 
-    def get_return_trip(self):
-        return ReturnTrip.objects.create_for_model(self, depart_url=self.authorize_url)
+    objects = PreAuthorizationManager()
 
-    @property
-    def authorize_url(self):
+    def make_authorize_url(self, redirect_uri, state):
         client = get_client()
         return client.new_pre_authorization_url(
-            self.max_amount,
-            self.interval_length,
-            self.interval_unit,
-            self.expires_at,
-            self.name or None,
-            self.description or None,
-            self.interval_count,
-            self.calendar_intervals,
-            self.redirect_url,
+            max_amount=self.max_amount,
+            interval_length=self.interval_length,
+            interval_unit=self.interval_unit,
+            expires_at=self.expires_at,
+            name=self.name or None,
+            description=self.description or None,
+            interval_count=self.interval_count,
+            calendar_intervals=self.calendar_intervals,
+            redirect_uri=redirect_uri,
+            state=state,
         )
 
-    @transition(source='notsent', target='inactive')
+    @transition(source=NOTSENT, target=INACTIVE)
     def user_returns(self, return_trip):
         returning_payload = return_trip.returning_payload
         self.resource_uri = returning_payload['resource_uri']
         self.resource_id = returning_payload['resource_id']
 
-    @property
-    def success_url(self):
-        # Where to go after a successful auth
-        # TODO: Implement properly
-        return '/pre-auth/done/'
+    @transition(source=INACTIVE, target=ACTIVE)
+    def activate(self):
+        pass
+
+    @transition(source='*', target=CANCELLED)
+    def cancel(self):
+        pass
+
+    @transition(source='*', target=EXPIRED)
+    def expire(self):
+        pass
+
+
+def handle_cancellation(sender, *args, **kwargs):
+    resource_id = sender.source_id
+    try:
+        pre_auth = PreAuthorization.objects.get(resource_id=resource_id)
+    except PreAuthorization.DoesNotExist, e:
+        logger.exception('Received callback for non-existant PreAuthorization object')
+    else:
+        pre_auth.cancel()
+
+def handle_expiry(sender, *args, **kwargs):
+    resource_id = sender.source_id
+    try:
+        pre_auth = PreAuthorization.objects.get(resource_id=resource_id)
+    except PreAuthorization.DoesNotExist, e:
+        logger.exception('Received callback for non-existant PreAuthorization object')
+    else:
+        pre_auth.expire()
+
+signals.pre_authorization_cancelled.connect(handle_cancellation)
+signals.pre_authorization_expired.connect(handle_expiry)
+
+
+
+
+
+
 
 
 

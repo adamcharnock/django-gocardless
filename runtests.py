@@ -11,12 +11,22 @@ if not settings.configured:
             }
         },
         USE_TZ=True,
+        GOCARDLESS_APP_ID='abcdefghijlmnopqrstuvwxyzabcdefghijlmnopqrstuvwxyz',
+        GOCARDLESS_ACCESS_TOKEN='01234567890aaaaaaaaaaaaaaa',
+        GOCARDLESS_MERCHANT_ID='123456',
         GOCARDLESS_APP_SECRET=(
             'BBYKKNKEK4WKN9YVK0BRARGS4QHDRVJB8J'
             'WYM84XTR9XQ591RGFSEFQ82B0ZKKYM'),
-        ROOT_URLCONF='django_gocardless.webhook.urls',
+        ROOT_URLCONF='django_gocardless.urls',
+        GOCARDLESS_SANDBOX=True,
+        GOCARDLESS_RETURN_ROOT='https://example.com',
         INSTALLED_APPS=[
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
             'django_gocardless.webhook',
+            'django_gocardless.returntrips',
+            'django_gocardless.preauthorizations',
         ],
         NOSE_ARGS = [
             '--with-coverage',

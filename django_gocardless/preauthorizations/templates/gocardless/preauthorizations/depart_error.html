@@ -1,0 +1,9 @@
+{% extends 'gocardless/base.html' %}
+
+{% block title %}Bad request{% endblock %}
+
+{% block content %}
+    <p>There was a problem with the request:</p>
+    {{ form.errors }}
+    <p>Contact your website's support team for more information</p>
+{% endblock %}

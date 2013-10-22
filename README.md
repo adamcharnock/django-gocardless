@@ -20,6 +20,7 @@ Using GoCardless Django
         GOCARDLESS_ACCESS_TOKEN = "..."
         GOCARDLESS_MERCHANT_ID = "..."
         GOCARDLESS_SANDBOX = True # Use sandbox while developing
+        GOCARDLESS_RETURN_ROOT = "https://yoursite.com"
 
 1.  GoCardless will post to your "webhook_url". 
     The view `django_gocardless.webhook.views.webhok_view` handles this. 
