@@ -30,7 +30,6 @@ class ReturnTrip(models.Model):
     for_pk = models.IntegerField()
     status = FSMField(default='departed')
     extra_state = models.CharField(max_length=255, default='', blank=True)
-    depart_url = models.CharField(max_length=255)
     success_url = models.URLField()
     cancel_url = models.URLField()
     returning_payload_json = models.TextField(default='')

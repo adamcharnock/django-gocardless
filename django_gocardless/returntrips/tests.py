@@ -12,7 +12,7 @@ RETURN_QS_BAD_STATE = '?resource_id=0FESY5V68N&resource_type=pre_authorization&r
 class ReturnViewTestCase(TestCase):
     def test_ok(self):
         pre_auth = PreAuthorization.objects.create(pk=12, max_amount=100)
-        return_trip = ReturnTrip.objects.create(pk=123456, for_model_class='preauthorizations.PreAuthorization', for_pk=12, depart_url='http://example.com')
+        return_trip = ReturnTrip.objects.create(pk=123456, for_model_class='preauthorizations.PreAuthorization', for_pk=12)
 
         with patch.object(get_client(), 'confirm_resource', lambda params: True):
             resp = self.client.get(reverse('gocardless_redirect_return') + RETURN_QS_OK)
