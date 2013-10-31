@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django_gocardless.client import get_client
-from django_gocardless.partner.models import PartnerMerchant
+from django_gocardless.partners.models import PartnerMerchant
 from django_gocardless.returntrips.models import ReturnTrip
 
 OK_URL = 'https://sandbox.gocardless.com/oauth/authorize?client_id=abcdefghijlmnopqrstuvwxyzabcdefghijlmnopqrstuvwxyz&merchant%5Bname%5D=&merchant%5Buser%5D%5Bemail%5D=a%40a.com&redirect_uri=https%3A%2F%2Fexample.com%2Fredirect-return%2F&response_type=code&scope=manage_merchant&state=1'
@@ -24,7 +24,7 @@ class PartnerDepartViewTestCase(TestCase):
         return_trip = ReturnTrip.objects.get()
         partner_merchant = PartnerMerchant.objects.get()
 
-        self.assertEqual(return_trip.for_model_class, 'partner.PartnerMerchant')
+        self.assertEqual(return_trip.for_model_class, 'partners.PartnerMerchant')
         self.assertEqual(return_trip.for_pk, partner_merchant.pk)
         self.assertEqual(return_trip.status, 'departed')
         self.assertEqual(return_trip.success_uri, 'http://example.com/')
@@ -47,7 +47,7 @@ class PartnerDepartViewTestCase(TestCase):
 
         return_trip = ReturnTrip.objects.create(
             pk=3,
-            for_model_class='partner.PartnerMerchant',
+            for_model_class='partners.PartnerMerchant',
             for_pk=1,
             success_uri='http://example.com/',
             cancel_uri='http://example.com/',

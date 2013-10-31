@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django_gocardless.partner.forms import PartnerDepartForm
-from django_gocardless.partner.models import PartnerMerchant
+from django_gocardless.partners.forms import PartnerDepartForm
+from django_gocardless.partners.models import PartnerMerchant
 from django_gocardless.returntrips.models import ReturnTrip
 from django_gocardless.returntrips.views import GoCardlessDepartureView
 

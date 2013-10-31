@@ -27,7 +27,7 @@ if not settings.configured:
             'django_gocardless.webhook',
             'django_gocardless.returntrips',
             'django_gocardless.preauthorizations',
-            'django_gocardless.partner',
+            'django_gocardless.partners',
         ],
         NOSE_ARGS = [
             '--with-coverage',
