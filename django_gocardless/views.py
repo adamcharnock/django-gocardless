@@ -17,6 +17,7 @@ class GoCardlessPayloadMixin(object):
 
 class GoCardlessSignatureMixin(GoCardlessPayloadMixin):
     """ Will verify a GoCardless signature """
+    manual_signature_check = False
 
     def verify_signature(self, request):
         data = self.get_payload(request)
@@ -33,7 +34,7 @@ class GoCardlessSignatureMixin(GoCardlessPayloadMixin):
         return False
 
     def dispatch(self, request, *args, **kwargs):
-        if not self.verify_signature(request):
+        if not self.manual_signature_check and not self.verify_signature(request):
             return self.handle_invalid_signature(request, *args, **kwargs)
 
         return super(GoCardlessSignatureMixin, self).dispatch(request, *args, **kwargs)

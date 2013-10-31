@@ -31,4 +31,16 @@ class ReturnViewTestCase(TestCase):
         resp = self.client.get(reverse('gocardless_redirect_return') + RETURN_QS_BAD_STATE)
         self.assertEqual(resp.status_code, 400)
 
+    def test_ok_unsigned(self):
+        pre_auth = PreAuthorization.objects.create(pk=12, max_amount=100)
+        return_trip = ReturnTrip.objects.create(is_signed=False, pk=123456, for_model_class='preauthorizations.PreAuthorization', for_pk=12)
+
+        with patch.object(get_client(), 'confirm_resource', lambda params: True):
+            resp = self.client.get(reverse('gocardless_redirect_return') + RETURN_QS_BAD_SIG)
+        self.assertEqual(resp.status_code, 302, resp.content)
+
+        return_trip = ReturnTrip.objects.get(pk=123456)
+        pre_auth = PreAuthorization.objects.get(pk=12)
+        self.assertEqual(return_trip.status, 'returned')
+        self.assertEqual(pre_auth.status, 'active')
 

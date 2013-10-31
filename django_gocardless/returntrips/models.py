@@ -30,9 +30,12 @@ class ReturnTrip(models.Model):
     for_pk = models.IntegerField()
     status = FSMField(default='departed')
     extra_state = models.CharField(max_length=255, default='', blank=True)
-    success_url = models.URLField()
-    cancel_url = models.URLField()
+    success_uri = models.URLField()
+    cancel_uri = models.URLField()
     returning_payload_json = models.TextField(default='')
+    departure_uri = models.URLField(null=True, default=None)
+    internal_redirect_uri = models.URLField(null=True, default=None)
+    is_signed = models.BooleanField(default=True)
 
     objects = ReturnTripManager()
 
@@ -44,35 +47,28 @@ class ReturnTrip(models.Model):
         model = self.get_model()
         self.returning_payload_json = json.dumps(payload)
 
-        # Log that we have returned
-        model.user_returns(self)
+        # Inform the model that the user has returned
+        model.user_returns(request, payload, self)
         model.save()
-
-        # Now confirm
-        try:
-            get_client().confirm_resource(payload)
-        except:
-            logger.exception('Failed to confirm resource on return trip')
-        else:
-            model.activate()
-            model.save()
 
     @property
     def returning_payload(self):
         return json.loads(self.returning_payload_json)
 
-    def get_departure_url(self):
-        redirect_uri = '%s%s' % (settings.GOCARDLESS_RETURN_ROOT, reverse('gocardless_redirect_return'))
-        return self.get_model().make_authorize_url(redirect_uri=redirect_uri, state=str(self.pk))
+    def get_departure_uri(self):
+        if not self.departure_uri:
+            redirect_uri = '%s%s' % (settings.GOCARDLESS_RETURN_ROOT, reverse('gocardless_redirect_return'))
+            self.departure_uri = self.get_model().make_departure_uri(redirect_uri=redirect_uri, state=str(self.pk))
+            self.internal_redirect_uri = redirect_uri
+            self.save()
+        return self.departure_uri
+    get_departure_uri.alters_data = True
 
 
 class ReturnTrippableMixin(object):
 
-    def make_authorize_url(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, state):
         raise NotImplementedError()
 
-    def user_returns(self, return_trip):
-        raise NotImplementedError()
-
-    def activate(self):
+    def user_returns(self, request, payload, return_trip):
         raise NotImplementedError()

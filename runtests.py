@@ -27,6 +27,7 @@ if not settings.configured:
             'django_gocardless.webhook',
             'django_gocardless.returntrips',
             'django_gocardless.preauthorizations',
+            'django_gocardless.partner',
         ],
         NOSE_ARGS = [
             '--with-coverage',
@@ -41,7 +42,6 @@ sys.path.insert(0, parent)
 
 from django_nose import NoseTestSuiteRunner
 test_runner = NoseTestSuiteRunner(verbosity=1)
-
-failures = test_runner.run_tests(['django_gocardless', ])
+failures = test_runner.run_tests(sys.argv[1:] or ['django_gocardless', ])
 if failures:
     sys.exit(failures)

@@ -28,14 +28,19 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
         (MONTH, 'Month'),
     )
 
-    NOTSENT = 'notsent'
     INACTIVE = 'inactive'
     ACTIVE = 'active'
     CANCELLED = 'cancelled'
     EXPIRED = 'expired'
+    STATUS_CHOICES = (
+        (INACTIVE, 'Inactive'),
+        (ACTIVE, 'Active'),
+        (CANCELLED, 'Cancelled'),
+        (EXPIRED, 'Expired'),
+    )
 
     created = models.DateTimeField(auto_now=True)
-    status = FSMField(default='notsent')
+    status = FSMField(default=INACTIVE, choices=STATUS_CHOICES)
     max_amount = models.DecimalField(max_digits=10, decimal_places=2)
     interval_length = models.SmallIntegerField(default=1)
     interval_unit = models.CharField(max_length=10, default=MONTH, choices=INTERVAL_UNIT_CHOICES)
@@ -53,7 +58,7 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
 
     objects = PreAuthorizationManager()
 
-    def make_authorize_url(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, state):
         client = get_client()
         return client.new_pre_authorization_url(
             max_amount=self.max_amount,
@@ -68,15 +73,16 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
             state=state,
         )
 
-    @transition(source=NOTSENT, target=INACTIVE)
-    def user_returns(self, return_trip):
-        returning_payload = return_trip.returning_payload
-        self.resource_uri = returning_payload['resource_uri']
-        self.resource_id = returning_payload['resource_id']
-
     @transition(source=INACTIVE, target=ACTIVE)
-    def activate(self):
-        pass
+    def user_returns(self, request, payload, return_trip):
+        # Now confirm
+        try:
+            get_client().confirm_resource(payload)
+        except:
+            logger.exception('Failed to confirm resource on return trip')
+
+        self.resource_uri = payload['resource_uri']
+        self.resource_id = payload['resource_id']
 
     @transition(source='*', target=CANCELLED)
     def cancel(self):
