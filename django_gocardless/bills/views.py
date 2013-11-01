@@ -12,7 +12,6 @@ class BillDepartView(GoCardlessDepartureView):
         data = form.cleaned_data
 
         to_user = data['to_user']
-
         bill = Bill.objects.create(
             user=self.request.user,
             to_user=to_user,

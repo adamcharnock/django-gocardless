@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django import forms
 from django.contrib.auth import get_user_model
+from django_gocardless.partners.models import PartnerMerchant
 
 
 class BillDepartForm(forms.Form):
@@ -23,5 +24,10 @@ class BillDepartForm(forms.Form):
             to_user = get_user_model().objects.get(pk=to_user)
         except get_user_model().DoesNotExist:
             raise forms.ValidationError('User specified by "to_user" could not be found')
+
+        try:
+            to_merchant = PartnerMerchant.objects.get(user=to_user, status=PartnerMerchant.AVAILABLE)
+        except PartnerMerchant.DoesNotExist:
+            raise forms.ValidationError('No merchant found for user specified by "to_user"')
 
         return to_user

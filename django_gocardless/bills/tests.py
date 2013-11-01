@@ -6,9 +6,11 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django_gocardless.bills.models import Bill
 from django_gocardless.client import get_client
+from django_gocardless.partners.models import PartnerMerchant
 from django_gocardless.returntrips.models import ReturnTrip
 
 OK_URL = 'https://sandbox.gocardless.com/connect/bills/new?bill%5Bamount%5D=12.34&bill%5Bdescription%5D=Bill%20description&bill%5Bmerchant_id%5D=123456&bill%5Bname%5D=Test%20Bill&bill%5Buser%5D%5Bcompany_name%5D=Acme%20Ltd&bill%5Buser%5D%5Bemail%5D=a%40a.com&bill%5Buser%5D%5Bfirst_name%5D=&bill%5Buser%5D%5Blast_name%5D=&bill%5Buser%5D%5Bpostal_code%5D=XX1%201XX&client_id=abcdefghijlmnopqrstuvwxyzabcdefghijlmnopqrstuvwxyz&nonce=3pexr4nUgHzP4cZguaqmmyktwXEwt5gP6bPQQ%2FfNPUzAvmKUZrBigA%3D%3D&redirect_uri=https%3A%2F%2Fexample.com%2Fredirect-return%2F&signature=28fd2118fce737d2529dc77a7281794f6b13c2e0262bb99811b524f945c809a1&state=1&timestamp=2013-11-01T13%3A53%3A42Z'
+OK_TO_USER_URL = 'https://sandbox.gocardless.com/connect/bills/new?bill%5Bamount%5D=12.34&bill%5Bdescription%5D=Bill%20description&bill%5Bmerchant_id%5D=xyzxyz&bill%5Bname%5D=Test%20Bill&bill%5Buser%5D%5Bcompany_name%5D=Acme%20Ltd&bill%5Buser%5D%5Bemail%5D=a%40a.com&bill%5Buser%5D%5Bfirst_name%5D=&bill%5Buser%5D%5Blast_name%5D=&bill%5Buser%5D%5Bpostal_code%5D=XX1%201XX&client_id=abcdefghijlmnopqrstuvwxyzabcdefghijlmnopqrstuvwxyz&nonce=3pexr4nUgHzP4cZguaqmmyktwXEwt5gP6bPQQ%2FfNPUzAvmKUZrBigA%3D%3D&redirect_uri=https%3A%2F%2Fexample.com%2Fredirect-return%2F&signature=28fd2118fce737d2529dc77a7281794f6b13c2e0262bb99811b524f945c809a1&state=2&timestamp=2013-11-01T13%3A53%3A42Z'
 RETURN_QS = '?resource_id=0FPYX3MRCD&resource_type=bill&resource_uri=https%3A%2F%2Fsandbox.gocardless.com%2Fapi%2Fv1%2Fbills%2F0FPYX3MRCD&signature=c9e321da30aa0eb72c1788f6b2d3fe3f22e070cc848c216e70bcf4384e5fdf5e&state=3'
 
 class PartnerDepartViewTestCase(TestCase):
@@ -73,10 +75,25 @@ class PartnerDepartViewTestCase(TestCase):
 
     def test_ok_to_user(self):
         user = get_user_model().objects.create(username='testuser', email='a@a.com')
-        to_user = get_user_model().objects.create(username='touser', email='to@user.com')
         user.set_password('pass')
         user.save()
         self.client.login(username='testuser', password='pass')
+
+        to_user = get_user_model().objects.create(username='touser', email='to@user.com')
+        pm_return_trip = ReturnTrip.objects.create(
+            pk=1,
+            for_model_class='partners.PartnerMerchant',
+            for_pk=9,
+            success_uri='http://example.com/',
+            cancel_uri='http://example.com/',
+        )
+        to_user_partner_merchant = PartnerMerchant.objects.create(
+            pk=9,
+            user=to_user,
+            status=PartnerMerchant.AVAILABLE,
+            return_trip=pm_return_trip,
+            merchant_id='xyzxyz',
+        )
 
         resp = self.client.get(reverse('gocardless_bill_depart'), data={
             'redirect_uri': 'http://example.com/',
@@ -90,8 +107,8 @@ class PartnerDepartViewTestCase(TestCase):
             'to_user': str(to_user.pk),
         })
         self.assertEqual(resp.status_code, 302, resp.content)
-        self.assertUrlPathEqual(resp['Location'], OK_URL)
-        self.assertQueryStringEqual(resp['Location'], OK_URL, ignore=['nonce', 'timestamp', 'signature'])
+        self.assertUrlPathEqual(resp['Location'], OK_TO_USER_URL)
+        self.assertQueryStringEqual(resp['Location'], OK_TO_USER_URL, ignore=['nonce', 'timestamp', 'signature'])
 
         bill = Bill.objects.get()
 

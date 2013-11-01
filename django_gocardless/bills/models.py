@@ -50,7 +50,7 @@ class Bill(ReturnTrippableMixin, models.Model):
             'postal_code': self.user_postal_code,
         }
 
-        return get_client().new_bill_url(
+        return self.get_client().new_bill_url(
             amount=self.amount,
             name=self.name,
             description=self.description,
