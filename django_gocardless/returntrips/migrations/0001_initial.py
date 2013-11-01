@@ -16,10 +16,12 @@ class Migration(SchemaMigration):
             ('for_pk', self.gf('django.db.models.fields.IntegerField')()),
             ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='departed', max_length=50)),
             ('extra_state', self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True)),
-            ('depart_url', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('success_url', self.gf('django.db.models.fields.URLField')(max_length=200)),
-            ('cancel_url', self.gf('django.db.models.fields.URLField')(max_length=200)),
+            ('success_uri', self.gf('django.db.models.fields.URLField')(max_length=200)),
+            ('cancel_uri', self.gf('django.db.models.fields.URLField')(max_length=200)),
             ('returning_payload_json', self.gf('django.db.models.fields.TextField')(default='')),
+            ('departure_uri', self.gf('django.db.models.fields.URLField')(default=None, max_length=200, null=True)),
+            ('internal_redirect_uri', self.gf('django.db.models.fields.URLField')(default=None, max_length=200, null=True)),
+            ('is_signed', self.gf('django.db.models.fields.BooleanField')(default=True)),
         ))
         db.send_create_signal(u'returntrips', ['ReturnTrip'])
 
@@ -32,16 +34,18 @@ class Migration(SchemaMigration):
     models = {
         u'returntrips.returntrip': {
             'Meta': {'object_name': 'ReturnTrip'},
-            'cancel_url': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
+            'cancel_uri': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'depart_url': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'departure_uri': ('django.db.models.fields.URLField', [], {'default': 'None', 'max_length': '200', 'null': 'True'}),
             'extra_state': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '255', 'blank': 'True'}),
             'for_model_class': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'for_pk': ('django.db.models.fields.IntegerField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'internal_redirect_uri': ('django.db.models.fields.URLField', [], {'default': 'None', 'max_length': '200', 'null': 'True'}),
+            'is_signed': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'returning_payload_json': ('django.db.models.fields.TextField', [], {'default': "''"}),
             'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'departed'", 'max_length': '50'}),
-            'success_url': ('django.db.models.fields.URLField', [], {'max_length': '200'})
+            'success_uri': ('django.db.models.fields.URLField', [], {'max_length': '200'})
         }
     }
 
