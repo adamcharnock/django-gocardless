@@ -62,7 +62,7 @@ class GoCardlessDepartureView(RedirectView):
         form = self.form(self.request.GET)
         if not form.is_valid():
             context = RequestContext(self.request, dict(form=form))
-            return render_to_response('gocardless/preauthorizations/depart_error.html', context_instance=context)
+            return render_to_response('django_gocardless/returntrips/depart_error.html', context_instance=context)
         else:
             kwargs['form'] = form
             return super(GoCardlessDepartureView, self).get(request, *args, **kwargs)
