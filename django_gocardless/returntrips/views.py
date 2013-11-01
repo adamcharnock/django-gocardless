@@ -14,6 +14,7 @@ class ReturnView(GoCardlessView):
     def get(self, request, *args, **kwargs):
         # We've come back from GoCardless
         state = request.GET.get('state')
+        cancelled = request.GET.get('cancel')
         try:
             state = int(state)
         except (ValueError, TypeError):
@@ -26,6 +27,19 @@ class ReturnView(GoCardlessView):
             # Oops, doesn't exist for some reason
             return HttpResponseBadRequest('Return trip not found. Perhaps state is invalid?')
 
+        if cancelled:
+            return self.handle_cancelled(request, return_trip)
+        else:
+            return self.handle_return(request, return_trip, *args, **kwargs)
+
+    def handle_cancelled(self, request, return_trip):
+        return_trip.cancel()
+        cancel_uri = return_trip.cancel_uri
+        if return_trip.extra_state:
+            cancel_uri += '?state=%s' % return_trip.extra_state
+        return HttpResponseRedirect(cancel_uri)
+
+    def handle_return(self, request, return_trip, *args, **kwargs):
         # Manually check the signature if this return trip expects one
         if return_trip.is_signed and not self.verify_signature(request):
             return self.handle_invalid_signature(request, *args, **kwargs)

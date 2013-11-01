@@ -58,7 +58,7 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
 
     objects = PreAuthorizationManager()
 
-    def make_departure_uri(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, cancel_uri, state):
         client = get_client()
         return client.new_pre_authorization_url(
             max_amount=self.max_amount,
@@ -70,6 +70,7 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
             interval_count=self.interval_count,
             calendar_intervals=self.calendar_intervals,
             redirect_uri=redirect_uri,
+            cancel_uri=cancel_uri,
             state=state,
         )
 

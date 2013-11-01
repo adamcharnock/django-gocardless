@@ -41,7 +41,7 @@ class Bill(ReturnTrippableMixin, models.Model):
 
         return client
 
-    def make_departure_uri(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, cancel_uri, state):
         user_details = {
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
@@ -49,13 +49,13 @@ class Bill(ReturnTrippableMixin, models.Model):
             'email': self.user.email,
             'postal_code': self.user_postal_code,
         }
-
         return self.get_client().new_bill_url(
             amount=self.amount,
             name=self.name,
             description=self.description,
             user=user_details,
             redirect_uri=redirect_uri,
+            cancel_uri=cancel_uri,
             state=state,
         )
 

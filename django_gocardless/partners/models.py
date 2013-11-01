@@ -29,14 +29,14 @@ class PartnerMerchant(ReturnTrippableMixin, models.Model):
         self.merchant_id = client._merchant_id
     exchange_code.alters_data = True
 
-    def make_departure_uri(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, cancel_uri, state):
         merchant_details = {
             'name': self.user.get_full_name(),
             'user': {
                 'email': self.user.email,
             }
         }
-
+        # Cancel URI is not an option here
         return get_client().new_merchant_url(
             redirect_uri=redirect_uri,
             merchant=merchant_details,

@@ -25,6 +25,16 @@ class ReturnTrip(models.Model):
     """ Stores information relating to a return trip to GoCardless
     """
 
+    DEPARTED = 'departed'
+    RETURNED = 'returned'
+    CANCELLED = 'cancelled'
+
+    STATUS_CHOICES = (
+        (DEPARTED, 'Departed'),
+        (RETURNED, 'Returned'),
+        (CANCELLED, 'Cancelled'),
+    )
+
     created = models.DateTimeField(auto_now=True)
     for_model_class = models.CharField(max_length=100)
     for_pk = models.IntegerField()
@@ -42,7 +52,7 @@ class ReturnTrip(models.Model):
     def get_model(self):
         return get_model(*self.for_model_class.split('.')).objects.get(pk=self.for_pk)
 
-    @transition(status, source='departed', target='returned', save=True)
+    @transition(status, source=DEPARTED, target=RETURNED, save=True)
     def receive(self, request, payload):
         model = self.get_model()
         self.returning_payload_json = json.dumps(payload)
@@ -51,6 +61,10 @@ class ReturnTrip(models.Model):
         model.user_returns(request, payload, self)
         model.save()
 
+    @transition(status, source=DEPARTED, target=CANCELLED, save=True)
+    def cancel(self):
+        pass
+
     @property
     def returning_payload(self):
         return json.loads(self.returning_payload_json)
@@ -58,7 +72,8 @@ class ReturnTrip(models.Model):
     def get_departure_uri(self):
         if not self.departure_uri:
             redirect_uri = '%s%s' % (settings.GOCARDLESS_RETURN_ROOT, reverse('gocardless_redirect_return'))
-            self.departure_uri = self.get_model().make_departure_uri(redirect_uri=redirect_uri, state=str(self.pk))
+            cancel_uri = '%s?cancel=1&state=%s' % (redirect_uri, self.pk)
+            self.departure_uri = self.get_model().make_departure_uri(redirect_uri=redirect_uri, cancel_uri=cancel_uri, state=str(self.pk))
             self.internal_redirect_uri = redirect_uri
             self.save()
         return self.departure_uri
@@ -67,7 +82,7 @@ class ReturnTrip(models.Model):
 
 class ReturnTrippableMixin(object):
 
-    def make_departure_uri(self, redirect_uri, state):
+    def make_departure_uri(self, redirect_uri, cancel_uri, state):
         raise NotImplementedError()
 
     def user_returns(self, request, payload, return_trip):
