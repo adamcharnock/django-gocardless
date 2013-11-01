@@ -4,4 +4,5 @@ urlpatterns = patterns('',
     url(r'^', include('django_gocardless.webhook.urls')),
     url(r'^', include('django_gocardless.returntrips.urls')),
     url(r'^', include('django_gocardless.partners.urls')),
+    url(r'^', include('django_gocardless.bills.urls')),
 )

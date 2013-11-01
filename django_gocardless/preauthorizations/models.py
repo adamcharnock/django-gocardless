@@ -73,41 +73,41 @@ class PreAuthorization(ReturnTrippableMixin, models.Model):
             state=state,
         )
 
-    @transition(source=INACTIVE, target=ACTIVE)
+    @transition(status, source=INACTIVE, target=ACTIVE)
     def user_returns(self, request, payload, return_trip):
         # Now confirm
         try:
             get_client().confirm_resource(payload)
         except:
-            logger.exception('Failed to confirm resource on return trip')
+            logger.exception('Failed to confirm pre-authorization')
 
         self.resource_uri = payload['resource_uri']
         self.resource_id = payload['resource_id']
 
-    @transition(source='*', target=CANCELLED)
+    @transition(status, source='*', target=CANCELLED)
     def cancel(self):
         pass
 
-    @transition(source='*', target=EXPIRED)
+    @transition(status, source='*', target=EXPIRED)
     def expire(self):
         pass
 
 
 def handle_cancellation(sender, *args, **kwargs):
-    resource_id = sender.source_id
+    resource_id = sender.id
     try:
         pre_auth = PreAuthorization.objects.get(resource_id=resource_id)
     except PreAuthorization.DoesNotExist, e:
-        logger.exception('Received callback for non-existant PreAuthorization object')
+        logger.exception('Received callback for non-existent PreAuthorization object')
     else:
         pre_auth.cancel()
 
 def handle_expiry(sender, *args, **kwargs):
-    resource_id = sender.source_id
+    resource_id = sender.id
     try:
         pre_auth = PreAuthorization.objects.get(resource_id=resource_id)
     except PreAuthorization.DoesNotExist, e:
-        logger.exception('Received callback for non-existant PreAuthorization object')
+        logger.exception('Received callback for non-existent PreAuthorization object')
     else:
         pre_auth.expire()
 

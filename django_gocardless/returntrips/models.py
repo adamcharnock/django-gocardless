@@ -42,7 +42,7 @@ class ReturnTrip(models.Model):
     def get_model(self):
         return get_model(*self.for_model_class.split('.')).objects.get(pk=self.for_pk)
 
-    @transition(source='departed', target='returned', save=True)
+    @transition(status, source='departed', target='returned', save=True)
     def receive(self, request, payload):
         model = self.get_model()
         self.returning_payload_json = json.dumps(payload)

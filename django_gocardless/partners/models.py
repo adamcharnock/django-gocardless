@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django_fsm.db.fields import FSMField
+from django_fsm.db.fields import FSMField, transition
 from django_gocardless.client import get_client
 from django_gocardless.returntrips.models import ReturnTrippableMixin
 
@@ -43,6 +43,7 @@ class PartnerMerchant(ReturnTrippableMixin, models.Model):
             state=state,
         )
 
+    @transition(status, source=PENDING, target=AVAILABLE)
     def user_returns(self, request, payload, return_trip):
         self.authorization_code = payload['code']
         self.exchange_code()
@@ -51,5 +52,4 @@ class PartnerMerchant(ReturnTrippableMixin, models.Model):
         # and it is non-changing anyway.
         self.scope = 'manage_merchant'
         self.token_type = 'bearer'
-        self.status = PartnerMerchant.AVAILABLE
 

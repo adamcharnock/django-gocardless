@@ -28,6 +28,7 @@ if not settings.configured:
             'django_gocardless.returntrips',
             'django_gocardless.preauthorizations',
             'django_gocardless.partners',
+            'django_gocardless.bills',
         ],
         NOSE_ARGS = [
             '--with-coverage',
