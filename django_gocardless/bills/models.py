@@ -5,6 +5,7 @@ from django_gocardless.client import get_client, get_merchant_client
 from django_gocardless.partners.models import PartnerMerchant
 from django_gocardless.returntrips.models import ReturnTrippableMixin
 from django_gocardless.utils import logger
+from django_gocardless.bills import signals
 
 
 class Bill(ReturnTrippableMixin, models.Model):
@@ -69,5 +70,7 @@ class Bill(ReturnTrippableMixin, models.Model):
 
         self.resource_uri = payload['resource_uri']
         self.resource_id = payload['resource_id']
+
+        signals.bill_paid.send(Bill, bill=self, request=request)
 
 
