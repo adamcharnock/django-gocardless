@@ -37,10 +37,14 @@ class GoCardlessSignatureMixin(GoCardlessPayloadMixin):
         if not self.manual_signature_check and not self.verify_signature(request):
             return self.handle_invalid_signature(request, *args, **kwargs)
 
-        return super(GoCardlessSignatureMixin, self).dispatch(request, *args, **kwargs)
+        response = super(GoCardlessSignatureMixin, self).dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-cache'
+        return response
 
     def handle_invalid_signature(self, request, *args, **kwargs):
-        return HttpResponseBadRequest('Signature did not validate')
+        response = HttpResponseBadRequest('Signature did not validate')
+        response['Cache-Control'] = 'no-cache'
+        return response
 
 
 class GoCardlessView(GoCardlessSignatureMixin, View):
