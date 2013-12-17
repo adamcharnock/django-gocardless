@@ -1,4 +1,5 @@
 from django.http.response import HttpResponseBadRequest, HttpResponseRedirect
+from django.utils.http import is_safe_url
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -62,7 +63,11 @@ class GoCardlessDepartureView(RedirectView):
         form = self.form(self.request.GET)
         if not form.is_valid():
             context = RequestContext(self.request, dict(form=form))
-            return render_to_response('django_gocardless/returntrips/depart_error.html', context_instance=context)
+            failure_uri = self.request.GET.get('failure_uri')
+            if failure_uri and is_safe_url(failure_uri, request.META['HTTP_HOST']):
+                return HttpResponseRedirect(failure_uri)
+            else:
+                return render_to_response('django_gocardless/returntrips/depart_error.html', context_instance=context)
         else:
             kwargs['form'] = form
             return super(GoCardlessDepartureView, self).get(request, *args, **kwargs)
