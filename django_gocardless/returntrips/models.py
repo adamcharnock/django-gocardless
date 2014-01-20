@@ -43,7 +43,8 @@ class ReturnTrip(models.Model):
     success_uri = models.URLField()
     cancel_uri = models.URLField()
     returning_payload_json = models.TextField(default='')
-    departure_uri = models.URLField(null=True, default=None)
+    # Use a TextField as it may be a long URI
+    departure_uri = models.TextField(null=True, default=None)
     internal_redirect_uri = models.URLField(null=True, default=None)
     is_signed = models.BooleanField(default=True)
 
