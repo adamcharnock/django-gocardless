@@ -17,7 +17,8 @@ setup(
         'gocardless',
         'django_model_utils',
         'django-nose',
-        'django-fsm',
+        'django-fsm==1.6.0',
+        'django-model-utils',
     ],
     description=(
         'A pluggable Django application for integrating GoCardless payments'),

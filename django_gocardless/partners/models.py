@@ -8,9 +8,11 @@ from django_gocardless.returntrips.models import ReturnTrippableMixin
 class PartnerMerchant(ReturnTrippableMixin, models.Model):
     PENDING = 'pending'
     AVAILABLE = 'available'
+    DEMOTED = 'demoted'
     STATUS_CHOICES = (
         (PENDING, 'Pending'),
         (AVAILABLE, 'Available'),
+        (DEMOTED, 'Demoted'),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='partner_merchants')
@@ -52,4 +54,11 @@ class PartnerMerchant(ReturnTrippableMixin, models.Model):
         # and it is non-changing anyway.
         self.scope = 'manage_merchant'
         self.token_type = 'bearer'
+        for partner_merchant in PartnerMerchant.objects.exclude(pk=self.pk):
+            partner_merchant.demote()
+
+
+    @transition(status, target=DEMOTED)
+    def demote(self):
+        pass
 
